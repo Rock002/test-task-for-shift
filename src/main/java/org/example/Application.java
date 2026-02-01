@@ -1,32 +1,38 @@
 package org.example;
 
 import org.example.config.ConfigurationDTO;
+import org.example.reader.Reader;
 import picocli.CommandLine;
-import picocli.CommandLine.*;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.Callable;
+import java.util.List;
 
 @Command(name = "App")
-public class Application implements Callable<Integer> {
+public class Application implements Runnable {
 
-    @Option(names = {"a"})
+    @Option(names = {"-a"})
     boolean addToExisting;
 
-    @Option(names = {"o"})
+    @Option(names = {"-o"})
     String pathToFiles;
 
-    @Option(names = {"p"})
+    @Option(names = {"-p"})
     String fileNamePrefix;
 
-    @Option(names = {"s"})
+    @Option(names = {"-s"})
     boolean isSimpleStats;
 
-    @Option(names = {"f"})
+    @Option(names = {"-f"})
     boolean isFullStats;
+
+    @Parameters
+    List<File> inputFiles;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new Application()).execute(args);
@@ -34,19 +40,21 @@ public class Application implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() {
-        try {
-            var config = validateAndGetConfiguration();
+    public void run() {
+        ConfigurationDTO config;
 
+        try {
+            config = validateAndGetConfiguration();
         } catch (RuntimeException exception) {
-            return 1;
+            return;
         }
 
-        return 0;
+        List<String> allLines = Reader.readFromAllFiles(config.inputFiles());
+
     }
 
-    public ConfigurationDTO validateAndGetConfiguration() {
-        if (!Files.isDirectory(Path.of(pathToFiles))) {
+    public ConfigurationDTO validateAndGetConfiguration() throws RuntimeException {
+        if (pathToFiles != null && !Files.isDirectory(Path.of(pathToFiles))) {
             throw new RuntimeException();
         }
 
@@ -55,7 +63,8 @@ public class Application implements Callable<Integer> {
                 pathToFiles,
                 fileNamePrefix,
                 isSimpleStats,
-                isFullStats
+                isFullStats,
+                inputFiles
         );
     }
 }

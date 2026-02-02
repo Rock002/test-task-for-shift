@@ -1,16 +1,18 @@
 package org.example;
 
-import org.example.config.ConfigurationDTO;
+import org.example.dto.ConfigurationDTO;
+import org.example.dto.Type;
 import org.example.reader.Reader;
+import org.example.sorter.SortByType;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumMap;
 import java.util.List;
 
 @Command(name = "App")
@@ -50,7 +52,7 @@ public class Application implements Runnable {
         }
 
         List<String> allLines = Reader.readFromAllFiles(config.inputFiles());
-
+        EnumMap<Type, List<?>> sortedLines = SortByType.apply(allLines);
     }
 
     public ConfigurationDTO validateAndGetConfiguration() throws RuntimeException {

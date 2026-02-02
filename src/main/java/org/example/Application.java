@@ -4,6 +4,9 @@ import org.example.dto.ConfigurationDTO;
 import org.example.dto.Type;
 import org.example.reader.Reader;
 import org.example.sorter.SortByType;
+import org.example.stats.full.FullNumberStats;
+import org.example.stats.full.FullStringStats;
+import org.example.stats.simple.SimpleStats;
 import org.example.writer.Writer;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -56,11 +59,28 @@ public class Application implements Runnable {
         EnumMap<Type, List<?>> sortedLines = SortByType.apply(allLines);
 
         Writer.write(sortedLines, config.pathsToOutputFiles(), config.addToExisting());
+
+        // статистика
+        if (config.isFullStats()) {
+            System.out.println("=== FULL STATISTIC ===\n");
+            new SimpleStats().apply(sortedLines);
+            new FullNumberStats().apply(sortedLines.get(Type.INTEGER), Type.INTEGER);
+            new FullNumberStats().apply(sortedLines.get(Type.FLOAT), Type.FLOAT);
+            new FullStringStats().apply(sortedLines.get(Type.STRING), Type.STRING);
+        } else {
+            System.out.println("=== SIMPLE STATISTIC ===\n");
+            new SimpleStats().apply(sortedLines);
+        }
     }
 
     public ConfigurationDTO validateAndGetConfiguration() throws RuntimeException {
         if (pathToFiles != null && !Files.isDirectory(Path.of(pathToFiles))) {
             System.out.println("такого пути не существует");
+            throw new RuntimeException();
+        }
+
+        if (isFullStats == isSimpleStats) {
+            System.out.println("Выберите ОДИН вид статистики !!");
             throw new RuntimeException();
         }
 
@@ -76,6 +96,7 @@ public class Application implements Runnable {
         for (Type type : Type.values()) {
             pathsToOutputFiles.put(type, new StringBuilder(pathCollector)
                     .append(type.name().toLowerCase())
+                    .append('s')
                     .append(".txt")
                     .toString()
             );
@@ -84,8 +105,8 @@ public class Application implements Runnable {
         return new ConfigurationDTO(
                 pathsToOutputFiles,
                 addToExisting,
-                isFullStats,
                 isSimpleStats,
+                isFullStats,
                 inputFiles
         );
     }

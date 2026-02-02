@@ -30,8 +30,8 @@ public class SortByType {
             stringList.add(line);
         }
 
-        sortedLines.put(Type.LONG, longList);
-        sortedLines.put(Type.DOUBLE, doubleList);
+        sortedLines.put(Type.INTEGER, longList);
+        sortedLines.put(Type.FLOAT, doubleList);
         sortedLines.put(Type.STRING, stringList);
 
         return sortedLines;

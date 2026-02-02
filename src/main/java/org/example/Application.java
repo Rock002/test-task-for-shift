@@ -4,6 +4,7 @@ import org.example.dto.ConfigurationDTO;
 import org.example.dto.Type;
 import org.example.reader.Reader;
 import org.example.sorter.SortByType;
+import org.example.writer.Writer;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -53,19 +54,36 @@ public class Application implements Runnable {
 
         List<String> allLines = Reader.readFromAllFiles(config.inputFiles());
         EnumMap<Type, List<?>> sortedLines = SortByType.apply(allLines);
+        Writer.write(sortedLines, config.pathsToOutputFiles());
     }
 
     public ConfigurationDTO validateAndGetConfiguration() throws RuntimeException {
         if (pathToFiles != null && !Files.isDirectory(Path.of(pathToFiles))) {
+            System.out.println("такого пути не существует");
             throw new RuntimeException();
         }
 
+        pathToFiles = pathToFiles == null ? "" : pathToFiles;
+
+        if (!pathToFiles.endsWith("/")) {
+            pathToFiles = new StringBuilder(pathToFiles).append("/").toString();
+        }
+
+        EnumMap<Type, String> pathsToOutputFiles = new EnumMap<>(Type.class);
+        StringBuilder pathCollector = new StringBuilder(pathToFiles).append(fileNamePrefix);
+
+        for (Type type : Type.values()) {
+            pathsToOutputFiles.put(type, new StringBuilder(pathCollector)
+                    .append(type.name().toLowerCase())
+                    .append(".txt")
+                    .toString()
+            );
+        }
+
         return new ConfigurationDTO(
-                addToExisting,
-                pathToFiles,
-                fileNamePrefix,
-                isSimpleStats,
+                pathsToOutputFiles,
                 isFullStats,
+                isSimpleStats,
                 inputFiles
         );
     }

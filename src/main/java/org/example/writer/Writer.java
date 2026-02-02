@@ -1,7 +1,6 @@
 package org.example.writer;
 
 import org.example.dto.Type;
-import picocli.CommandLine;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -11,14 +10,14 @@ import java.util.List;
 
 
 public class Writer {
-    public static void write(EnumMap<Type, List<?>> sortedLines, EnumMap<Type, String> pathsToOutputFiles) {
+    public static void write(EnumMap<Type, List<?>> sortedLines, EnumMap<Type, String> pathsToOutputFiles, boolean addToExisting) {
         for (Type type : Type.values()) {
             List<?> currentList = sortedLines.get(type);
             if (currentList.isEmpty()) {
                 continue;
             }
 
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(pathsToOutputFiles.get(type)))) {
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(pathsToOutputFiles.get(type), addToExisting))) {
                 currentList.forEach(
                         elem -> {
                             try {
@@ -34,6 +33,5 @@ public class Writer {
                 throw new RuntimeException(e);
             }
         }
-
     }
 }

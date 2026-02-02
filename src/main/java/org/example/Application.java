@@ -54,7 +54,8 @@ public class Application implements Runnable {
 
         List<String> allLines = Reader.readFromAllFiles(config.inputFiles());
         EnumMap<Type, List<?>> sortedLines = SortByType.apply(allLines);
-        Writer.write(sortedLines, config.pathsToOutputFiles());
+
+        Writer.write(sortedLines, config.pathsToOutputFiles(), config.addToExisting());
     }
 
     public ConfigurationDTO validateAndGetConfiguration() throws RuntimeException {
@@ -65,7 +66,7 @@ public class Application implements Runnable {
 
         pathToFiles = pathToFiles == null ? "" : pathToFiles;
 
-        if (!pathToFiles.endsWith("/")) {
+        if (!pathToFiles.isEmpty() && !pathToFiles.endsWith("/")) {
             pathToFiles = new StringBuilder(pathToFiles).append("/").toString();
         }
 
@@ -82,6 +83,7 @@ public class Application implements Runnable {
 
         return new ConfigurationDTO(
                 pathsToOutputFiles,
+                addToExisting,
                 isFullStats,
                 isSimpleStats,
                 inputFiles

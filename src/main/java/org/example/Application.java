@@ -8,6 +8,8 @@ import org.example.stats.full.FullNumberStats;
 import org.example.stats.full.FullStringStats;
 import org.example.stats.simple.SimpleStats;
 import org.example.writer.Writer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -21,6 +23,7 @@ import java.util.List;
 
 @Command(name = "App")
 public class Application implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
     @Option(names = {"-a"})
     boolean addToExisting;
@@ -47,40 +50,35 @@ public class Application implements Runnable {
 
     @Override
     public void run() {
-        ConfigurationDTO config;
-
         try {
-            config = validateAndGetConfiguration();
-        } catch (RuntimeException exception) {
-            return;
-        }
+            ConfigurationDTO config = validateAndGetConfiguration();
 
-        List<String> allLines = Reader.readFromAllFiles(config.inputFiles());
-        EnumMap<Type, List<?>> sortedLines = SortByType.apply(allLines);
+            List<String> allLines = Reader.readFromAllFiles(config.inputFiles());
+            EnumMap<Type, List<?>> sortedLines = SortByType.apply(allLines);
+            Writer.write(sortedLines, config.pathsToOutputFiles(), config.addToExisting());
 
-        Writer.write(sortedLines, config.pathsToOutputFiles(), config.addToExisting());
-
-        // статистика
-        if (config.isFullStats()) {
-            System.out.println("=== FULL STATISTIC ===\n");
-            new SimpleStats().apply(sortedLines);
-            new FullNumberStats().apply(sortedLines.get(Type.INTEGER), Type.INTEGER);
-            new FullNumberStats().apply(sortedLines.get(Type.FLOAT), Type.FLOAT);
-            new FullStringStats().apply(sortedLines.get(Type.STRING), Type.STRING);
-        } else {
-            System.out.println("=== SIMPLE STATISTIC ===\n");
-            new SimpleStats().apply(sortedLines);
-        }
+            // статистика
+            if (config.isFullStats()) {
+                System.out.println("=== FULL STATISTIC ===\n");
+                new SimpleStats().apply(sortedLines);
+                new FullNumberStats().apply(sortedLines.get(Type.INTEGER), Type.INTEGER);
+                new FullNumberStats().apply(sortedLines.get(Type.FLOAT), Type.FLOAT);
+                new FullStringStats().apply(sortedLines.get(Type.STRING), Type.STRING);
+            } else {
+                System.out.println("=== SIMPLE STATISTIC ===\n");
+                new SimpleStats().apply(sortedLines);
+            }
+        } catch (RuntimeException _) { }
     }
 
     public ConfigurationDTO validateAndGetConfiguration() throws RuntimeException {
         if (pathToFiles != null && !Files.isDirectory(Path.of(pathToFiles))) {
-            System.out.println("такого пути не существует");
+            LOGGER.error("-o {} - Такого пути не существует", pathToFiles);
             throw new RuntimeException();
         }
 
         if (isFullStats == isSimpleStats) {
-            System.out.println("Выберите ОДИН вид статистики !!");
+            LOGGER.error("Необходимо выбрать только один вид статистики");
             throw new RuntimeException();
         }
 

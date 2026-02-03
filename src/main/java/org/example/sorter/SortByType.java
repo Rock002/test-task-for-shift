@@ -1,12 +1,16 @@
 package org.example.sorter;
 
 import org.example.dto.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
 public class SortByType {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SortByType.class);
+
     public static EnumMap<Type, List<?>> apply(List<String> allLines) {
         EnumMap<Type, List<?>> sortedLines = new EnumMap<>(Type.class);
 
@@ -33,6 +37,8 @@ public class SortByType {
         sortedLines.put(Type.INTEGER, longList);
         sortedLines.put(Type.FLOAT, doubleList);
         sortedLines.put(Type.STRING, stringList);
+
+        LOGGER.info("Сортровка данных завершена");
 
         return sortedLines;
     }
